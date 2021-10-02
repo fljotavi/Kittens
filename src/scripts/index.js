@@ -1,47 +1,64 @@
-import * as d3 from "d3"
-import { CAT_IMG_SIZE, VIEWBOX } from "./constants";
-import { adjustPopoverRotation, renderFilterOn, renderKittensOn, renderOverlayDynamicOn, renderOverlayStaticOn } from "./render";
+/**
+ * @file index.js
+ * @description The main entry and the render pipeline
+ * @author Tzingtao Chow <i@tzingtao.com>
+ */
 
-// Init canvas for cat color picking
-const catColorImg = document.querySelector('#canvas-src')
-const context = document.querySelector('canvas').getContext('2d');
-context.drawImage(catColorImg, 0, 0, CAT_IMG_SIZE, CAT_IMG_SIZE);
+import * as d3 from 'd3'
+import {
+    KITTEN_IMG_SIZE,
+    POPOVER_TRANSFORM_VALUE,
+    REPAINT_DELAY,
+    REPAINT_INTERVAL, 
+    STAGE_REVEAL_DELAY, 
+    STAGE_REVEAL_DURATION, 
+    VIEWBOX
+} from './constants'
+import {
+    adjustPopoverPosition,
+    appendGlobalDefsOn, 
+    appendKittensOn,
+    appendOverlayDynamicOn,
+    appendOverlayStaticOn
+} from './manip'
+import { setCanvasContext } from './store'
+
+// Init canvas for kitten color picking
+const kittenColorImg = document.querySelector('#canvas-src')
+const context = document.querySelector('canvas').getContext('2d')
+context.drawImage(kittenColorImg, 0, 0, KITTEN_IMG_SIZE, KITTEN_IMG_SIZE)
+setCanvasContext(context)
 
 // Init SVG elements
-const svg = d3.select('svg-frame').append('svg').attr('viewBox', VIEWBOX)
+const svg = d3.select('svg-frame').append('svg').attr('id', 'top-level-svg').attr('viewBox', VIEWBOX)
 const g = svg.append('g').attr('class', 'turbulent-g').attr('style', 'filter: url(#xkcdify)')
 
-// Init global state for the app
-window.state = {
-    activeKitten: {},
-    canvasContext: context,
-    els: { svg, g }
-}
+// Append global SVG defs, including filters, gradients, etc.
+appendGlobalDefsOn(svg)
 
 // Append layered SVG groups respectively
 const gKittensBody = g.append('g').attr('class', 'g-kittens-body')
-const gPopover = g.append('g').attr('class', 'g-popover')
+const gPopover = g.append('g').attr('class', 'g-popover').attr('transform', POPOVER_TRANSFORM_VALUE())
 const gOverlaidStatic = gPopover.append('g').attr('class', 'g-overlaid-static')
 const gOverlaidDynamic = gPopover.append('g').attr('class', 'g-overlaid-dynamic')
 
-// Render static layers
-renderFilterOn(svg)
-renderOverlayStaticOn(gOverlaidStatic)
+// Append static layers
+appendOverlayStaticOn(gOverlaidStatic)
 
-// Render dynamic layers
-const renderAllDynamicContent = () => {
-    renderKittensOn(gKittensBody)
+// Append dynamic layers
+const appendAllDynamicContent = () => {
+    appendKittensOn(gKittensBody)
     setTimeout(() => {
-        renderOverlayDynamicOn(gOverlaidDynamic)
-        adjustPopoverRotation(gPopover)
-    }, 800)
+        appendOverlayDynamicOn(gOverlaidDynamic)
+        adjustPopoverPosition(gPopover)
+    }, REPAINT_DELAY)
 }
-renderAllDynamicContent()
+appendAllDynamicContent()
 setInterval(() => {
-    renderAllDynamicContent()
-}, 2000)
+    appendAllDynamicContent()
+}, REPAINT_INTERVAL)
 
 // Reveal stage and start animating!
 setTimeout(() => {
-    d3.select("svg-frame").transition().duration(500).style("opacity", 1)
-}, 1000)
+    d3.select('svg-frame').transition().duration(STAGE_REVEAL_DURATION).style('opacity', 1)
+}, STAGE_REVEAL_DELAY)

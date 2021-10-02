@@ -1,73 +1,111 @@
-@import url('https://fonts.googleapis.com/css2?family=Alfa+Slab+One&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Alfa+Slab+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap");
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html,
 body {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    overflow: hidden;
-    transition: all .2s;
-    background: #fafae9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+  overflow: hidden;
+  transition: all 0.2s;
+  background: #fafae9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
 }
 
-svg {
-    width: 100vw;
-    height: 100vh;
+#top-level-svg {
+  width: 100vw;
+  height: 100vh;
 }
 
 svg-frame {
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    position: absolute;
-    align-self: center;
-    opacity: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  position: absolute;
+  align-self: center;
+  opacity: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .none {
-    display: none;
+  display: none;
 }
 
 .g-popover {
-    transform-origin: center;
-}
-
-.g-overlaid-static,
-.g-overlaid-dynamic {
-    transform: translate(160px, 890px) scale(0.5);
+  transform-origin: center;
 }
 
 .kitten-frame {
-    transform: scale(2) translate(126px, 199px);
+  transform: scale(2) translate(126px, 199px);
+}
+
+.single-kitten-group > g {
+  cursor: pointer;
+}
+
+.single-kitten-group > g:hover {
+  animation: vibrate 0.4s linear infinite both;
 }
 
 .overlaid-text {
-    fill: white;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 25px;
-    user-select: none;
+  fill: #fafae9;
+  font-family: "Montserrat", sans-serif;
+  font-size: 25px;
+  user-select: none;
 }
 
 .heading {
-    font-size: 75px;
-    font-family: 'Alfa Slab One', sans-serif;
+  font-size: 75px;
+  font-family: "Alfa Slab One", sans-serif;
 }
 
 .prop-key {
-    font-weight: bold;
+  font-weight: bold;
 }
 
+@keyframes vibrate {
+  0% {
+    transform: translate(0);
+  }
+  10% {
+    transform: translate(-2px, -2px);
+  }
+  20% {
+    transform: translate(2px, -2px);
+  }
+  30% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(2px, 2px);
+  }
+  50% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, -2px);
+  }
+  70% {
+    transform: translate(-2px, 2px);
+  }
+  80% {
+    transform: translate(-2px, -2px);
+  }
+  90% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}

@@ -1,158 +1,241 @@
-import {
-    CAT_WEIGHT_DISTRIBUTION_SKEW,
-    MAX_CAT_AGE,
-    MAX_CAT_WEIGHT,
-    MIN_CAT_AGE,
-    MIN_CAT_WEIGHT,
-    startingPoints
-} from "./constants";
+/**
+ * @file render.js
+ * @description Shape calculation and path concatenation
+ * @author Tzingtao Chow <i@tzingtao.com>
+ */
 
-import { generateKittenPath } from "./generateKittenPath";
-import { getRandomCatColor, getRandomGender, getNormalDistribution } from "./utils";
+import { DEFAULT_KITTEN_AGE } from './constants'
+import { mapObject, randomOffset } from './utils'
 
-export const renderSingleKittenOn = (el, isUpdate = false) => {
+// In the drawing process, each point (vertex) is calculated with given parameters
+// deriving from kitten props, and applied a random offset to create a 'sketchy' feeling.
+// This step is called morphing.
 
-    const { svg } = window.state.els
+// A morphDef can morph a set of original point (x, y) into a new point
+// based on metrics related to kitten figure / characteristics.
 
-    if (isUpdate) {
-        const t = svg.transition().duration(750);
-        el.call(update => update.transition(t)
-            .attr('d', d => d.path)
-            .attr('fill', d => d.color)
-        )
-    } else {
-        el.append("path")
-            .attr('d', d => d.path)
-            .attr('data-coords', d => d.coords)
-            .attr('fill', d => d.color)
-            .attr('stroke-width', 2)
-            .attr('stroke', 'black')
-            .transition()
+const morphDefs = {
+
+    /**
+     * @param {number} x Coordinate x(0) of the original point
+     * @param {number} y Coordinate y(1) of the original point
+     * @param {number} h Height coefficient, typically related to the age of a kitten
+     * @param {number} c Chubbiness
+     * @param {number} k Macro randomness (global)
+     * @param {Function} r Micro randomness (differs in each calculation)
+     * 
+     * @return {Array} Coordinate [x, y] of the morphed point
+     */
+
+    waist: (x, y, h, c, k, r) => [
+        x * c + k * r(3),
+        y + k * r(3)
+    ],
+    earTop: (x, y, h, c, k, r) => [
+        x * c + k * r(2),
+        y - h + k * r(2)
+    ],
+    leftEarCut: (x, y, h, c, k, r) => [
+        x * c - 4 * (c - 1) - k * r(2),
+        y - h - 2 * c + k * r(2)
+    ],
+    rightEarCut: (x, y, h, c, k, r) => [
+        x * c + 4 * (c - 1) + k * r(2),
+        y - h - 2 * c + k * r(2)
+    ],
+    eyeTop: (x, y, h, c, k, r) => [
+        x * c + k * r(0.2),
+        y - h + k * r(0.2)
+    ],
+    eyeBottom: (x, y, h, c, k, r) => [
+        x * c + k * r(0.2),
+        y - 1.2 * h + k * r(0.2)
+    ]
+}
+
+// Keypoint is the first set of points calculated that defines the general outer figure of the kitten.
+// Some points may be derived later based on these points.
+// e.g., the start point of a belt should located somewhere between the waist and ear top.
+
+const keypointGenerators = {
+    leftWaist: {
+        origin: [-15, 0],
+        morph: morphDefs.waist
+    },
+    rightWaist: {
+        origin: [15, 0],
+        morph: morphDefs.waist
+    },
+    leftEarTop: {
+        origin: [-10, -50],
+        morph: morphDefs.earTop
+    },
+    rightEarTop: {
+        origin: [10, -50],
+        morph: morphDefs.earTop
+    },
+    leftEyeTop: {
+        origin: [-5, -33],
+        morph: morphDefs.eyeTop
+    },
+    rightEyeTop: {
+        origin: [5, -33],
+        morph: morphDefs.eyeTop
+    },
+    leftEyeBottom: {
+        origin: [-5, -24],
+        morph: morphDefs.eyeBottom
+    },
+    rightEyeBottom: {
+        origin: [5, -24],
+        morph: morphDefs.eyeBottom
+    },
+    leftEarCut: {
+        origin: [-5, -40],
+        morph: morphDefs.leftEarCut
+    },
+    rightEarCut: {
+        origin: [5, -40],
+        morph: morphDefs.rightEarCut
+    }
+}
+
+// Concatenates an array of commands into a complete SVG Path string that could be used directly
+const concatCommands = commands => commands
+    .map(step => ({
+        action: step.action,
+        to: step.to
+    }))
+    .reduce(
+        (accu, step) => `${accu} ${step.action} ${step.to.join(' ')}`,
+        ''
+    )
+
+/**
+ * Generates drawing commands for a specific kitten with determined metrics
+ *
+ * @param {number} age Kitten's age
+ * @param {number} chubbiness Kitten's chubbiness
+ * @param {number} randomness How randomized the points should locate
+ * @return {Object} An object containing all required drawing steps for different body parts
+ */
+export const generateDrawingCommands = (age = DEFAULT_KITTEN_AGE, chubbiness = 1, randomness = 1) => {
+
+    const heightOffset = age * 3 - 20
+
+    const keypoints = mapObject(keypointGenerators, values => {
+        const { origin, morph } = values
+        return morph(...origin, heightOffset, chubbiness, randomness, randomOffset)
+    })
+
+    const figure = concatCommands([
+
+        // Draw the kitten outline
+        { action: 'M', to: keypoints.leftWaist },
+        { action: 'L', to: keypoints.leftEarTop },
+        { action: 'L', to: keypoints.leftEarCut },
+        { action: 'L', to: keypoints.rightEarCut },
+        { action: 'L', to: keypoints.rightEarTop },
+        { action: 'L', to: keypoints.rightWaist },
+
+        // Draw the left eye
+        { action: 'M', to: keypoints.leftEyeTop },
+        { action: 'L', to: keypoints.leftEyeBottom },
+
+        // Draw the right eye
+        { action: 'M', to: keypoints.rightEyeTop },
+        { action: 'L', to: keypoints.rightEyeBottom }
+
+    ])
+
+    const belt = concatCommands([
+
+        // Starting from the left top corner of the belt
+        {
+            action: 'M',
+            to: [
+                0.7 * keypoints.leftWaist[0] + 0.3 * keypoints.leftEarTop[0] + 0.1 * heightOffset - 1,
+                keypoints.leftEyeBottom[1] + 10
+            ]
+        },
+
+        // Curves downwards slightly
+        {
+            action: 'Q',
+            to: [
+                0,
+                keypoints.leftEyeBottom[1] + 19,
+                0.7 * keypoints.rightWaist[0] + 0.3 * keypoints.rightEarTop[0] - 0.1 * heightOffset + 1,
+                keypoints.rightEyeBottom[1] + 10
+            ]
+        },
+
+        // And connects to the right bottom
+        {
+            action: 'L',
+            to: [
+                0.7 * keypoints.rightWaist[0] + 0.3 * keypoints.rightEarTop[0] - 0.1 * heightOffset + 1.7,
+                keypoints.rightEyeBottom[1] + 15
+            ]
+        },
+
+        // Curves downwards again
+        {
+            action: 'Q',
+            to: [
+                0,
+                keypoints.leftEyeBottom[1] + 22,
+                0.7 * keypoints.leftWaist[0] + 0.3 * keypoints.leftEarTop[0] + 0.1 * heightOffset - 1.7,
+                keypoints.leftEyeBottom[1] + 15
+            ]
+        },
+
+        // And close the belt shape
+        {
+            action: 'Z',
+            to: []
+        }
+
+    ])
+
+    const bell =  {
+        // This is quite straightforward, innit
+        cx: 0,
+        cy: keypoints.leftEyeBottom[1] + 22
     }
 
-}
+    const belly = {
 
-export const renderKittensOn = el => {
+        // Draw a closed spline of multiple randomly distributed points inside the kitten's body
+        splineBy: [
+            [
+                keypoints.leftWaist[0] * 0.75 + randomOffset(5),
+                50
+            ],
+            [
+                keypoints.leftWaist[0] * 0.6 + randomOffset(8),
+                keypoints.leftEyeBottom[1] + 27 + randomOffset(25)
+            ],
+            [
+                randomOffset(8),
+                keypoints.leftEyeBottom[1] + 27 + randomOffset(28)
+            ],
+            [
+                keypoints.rightWaist[0] * 0.6 + randomOffset(8),
+                keypoints.leftEyeBottom[1] + 27 + randomOffset(25)
+            ],
+            [
+                keypoints.rightWaist[0] * 0.75 + randomOffset(5),
+                50
+            ]
+        ],
 
-    el.selectAll('path')
-        .data(startingPoints.map(sp => {
+        // Sadly, not all kittens have belly
+        opacity: Math.random() > 0.9 ? 0 : Math.random()
 
-            const coords = `${sp[0]},${sp[1]}`
-            const age = MIN_CAT_AGE + Math.random() * MAX_CAT_AGE
-            const chubbiness = getNormalDistribution(MIN_CAT_WEIGHT, MAX_CAT_WEIGHT, CAT_WEIGHT_DISTRIBUTION_SKEW)
-            const path = generateKittenPath(sp, age, chubbiness)
-            const color = getRandomCatColor()
-            const gender = getRandomGender()
+    }
 
-            const kittenMetrics = { coords, age, chubbiness, path, color, gender }
 
-            if (coords === '200,1230') {
-                window.state.activeKitten = {
-                    ...kittenMetrics,
-                    path: generateKittenPath([0, 0], age, chubbiness)
-                }
-            }
-            return kittenMetrics
-
-        }))
-        .join(
-            enter => renderSingleKittenOn(enter),
-            update => renderSingleKittenOn(update, true)
-        )
-
-}
-
-export const kittenPropsToRender = [
-    { text: 'Age', key: 'age', middleware: age => Math.round(age) },
-    { text: 'Gender', key: 'gender', middleware: gender => gender },
-    {
-        text: 'Bodyweight', key: 'chubbiness',
-        middleware: (chub, self) => `${(chub * 2.5 + chub * self.age / 6).toFixed(1)}kg`
-    },
-    { text: 'Color', key: 'color', middleware: 'CUSTOM' }
-]
-
-export const renderOverlayStaticOn = el => {
-    el.append('path')
-        .attr('d', 'm193.07708,524.84422c0,0.88124 52.87463,-71.38075 71.38075,-76.66821c18.50612,-5.28746 410.65962,-5.28746 410.57493,-5.79162c0.08469,0.50415 11.54086,-1.25833 16.82833,-6.5458c5.28746,-5.28746 5.28746,-5.28746 5.20277,-5.79162c0.08469,0.50415 2.72843,-355.51835 -1.67779,-360.80581c-4.40622,-5.28746 -21.14985,-6.16871 -21.23455,-6.67285c0.08469,0.50415 -523.37414,-2.13959 -532.18658,2.26663c-8.81244,4.40622 -7.93119,17.62488 -8.01588,17.12073c0.08468,0.50415 0.08468,347.71421 5.37214,357.4079c5.28746,9.69368 24.67483,10.57493 24.59014,10.07077c0.08468,0.50415 45.90936,-1.25833 45.82468,-1.76249c0.08468,0.50415 -16.65895,76.29112 -16.65895,77.17237z')
-        .attr('fill', '#222')
-    el.append('text')
-        .attr('class', 'overlaid-text heading')
-        .text('mxm!')
-        .attr('x', 170)
-        .attr('y', 170)
-    el.append('rect')
-        .attr('class', 'overlaid-text avatar')
-        .attr('x', 174)
-        .attr('y', 210)
-        .attr('width', 155)
-        .attr('height', 185)
-
-    kittenPropsToRender.forEach((prop, iRow) => {
-        el.append('text')
-            .attr('class', 'overlaid-text prop-key')
-            .text(prop.text)
-            .attr('x', 370)
-            .attr('y', 230 + iRow * 50)
-        el.append('path')
-            .attr('d', `M ${370} ${246 + iRow * 50} h ${290}`)
-            .attr('stroke', '#444')
-            .attr('stroke-width', 2)
-    })
-}
-
-export const renderOverlayDynamicOn = el => {
-
-    const { activeKitten } = window.state
-
-    el.selectAll('text')
-        .data(kittenPropsToRender
-            .filter(prop => prop.middleware !== 'CUSTOM')
-            .map(prop => prop.middleware(activeKitten[prop.key], activeKitten)))
-        .join('text')
-        .attr('class', 'overlaid-text prop-value')
-        .text(d => d)
-        .attr('x', 560)
-        .attr('y', (d, iRow) => 230 + iRow * 50)
-
-    el.selectAll('rect')
-        .data([activeKitten.color])
-        .join('rect')
-        .attr('fill', d => d)
-        .attr('x', 560)
-        .attr('y', 370)
-        .attr('width', 40)
-        .attr('height', 10)
-
-    const gKittenFrame = el.selectAll('g')
-        .data([activeKitten])
-        .join('g')
-        .attr('class', 'kitten-frame')
-        .html("")
-
-    renderSingleKittenOn(gKittenFrame)
-}
-
-export const renderFilterOn = el => {
-    el.append('filter')
-        .attr('id', 'xkcdify')
-        .attr('filterUnits', 'userSpaceOnUse')
-        .attr('x', -5)
-        .attr('y', -5)
-        .attr('width', '100%')
-        .attr('height', '100%')
-        .call((f) => f.append('feTurbulence')
-            .attr('type', 'fractalNoise')
-            .attr('baseFrequency', '0.07')
-            .attr('result', 'noise'))
-        .call((f) => f.append('feDisplacementMap')
-            .attr('scale', '3')
-            .attr('xChannelSelector', 'R')
-            .attr('yChannelSelector', 'G')
-            .attr('in', 'SourceGraphic')
-            .attr('in2', 'noise'));
-}
-
-export const adjustPopoverRotation = el => {
-    el.attr("style", `transform: rotate(${Math.random() * 5 - 1}deg)`)
+    // Yep, these names are intentional
+    return { figure, belt, bell, belly }
 }
