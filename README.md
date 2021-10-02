@@ -2,7 +2,7 @@
 
 使用 d3 绘制 SVG，生成一堆随机颜色、性别、身高和肥胖程度的猫猫。
 
-![kittens_pre.gif](https://i.loli.net/2021/10/01/HJGIiKBobsOS8tE.gif)
+![kittens_prev.gif](https://i.loli.net/2021/10/02/YTcCI15EDKgU9RG.gif)
 
 ## Start Building 开始构建
 
@@ -21,6 +21,6 @@ npm install
 npm start
 ```
 
-## License
+## License 许可证
 
 MIT（软体部分）/ CC-BY-4.0（艺术作品部分）

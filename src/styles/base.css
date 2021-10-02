@@ -74,6 +74,35 @@ svg-frame {
   font-weight: bold;
 }
 
+.source-link {
+  position: fixed;
+  bottom: 28px;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: "Alfa Slab One", sans-serif;
+  text-decoration: none;
+  color: inherit;
+  font-size: 14px;
+  text-transform: uppercase;
+  opacity: 0.1;
+  display: flex;
+  align-items: center;
+}
+
+.source-link span {
+  margin-right: 5px;
+}
+
+.source-link:hover {
+  opacity: 0.4;
+}
+
+.octicon {
+  width: 20px;
+  height: 20px;
+}
+
 @keyframes vibrate {
   0% {
     transform: translate(0);
