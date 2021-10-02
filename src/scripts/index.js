@@ -7,7 +7,6 @@
 import * as d3 from 'd3'
 import {
     KITTEN_IMG_SIZE,
-    POPOVER_TRANSFORM_VALUE,
     REPAINT_DELAY,
     REPAINT_INTERVAL, 
     STAGE_REVEAL_DELAY, 
@@ -38,7 +37,7 @@ appendGlobalDefsOn(svg)
 
 // Append layered SVG groups respectively
 const gKittensBody = g.append('g').attr('class', 'g-kittens-body')
-const gPopover = g.append('g').attr('class', 'g-popover').attr('transform', POPOVER_TRANSFORM_VALUE())
+const gPopover = g.append('g').attr('class', 'g-popover')
 const gOverlaidStatic = gPopover.append('g').attr('class', 'g-overlaid-static')
 const gOverlaidDynamic = gPopover.append('g').attr('class', 'g-overlaid-dynamic')
 

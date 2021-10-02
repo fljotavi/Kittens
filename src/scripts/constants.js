@@ -58,6 +58,6 @@ export const POPOVER_TRANSFORM_VALUE = (activeKittenHeight = 0) => {
     const offset = -activeKittenHeight * (IS_VERTICAL ? 5 : 3)
     const r = randomOffset(5)
     return IS_VERTICAL 
-        ? `translate(0, ${offset + 90}) scale(0.4) rotate(${r})` 
-        : `translate(480, ${offset + 40}) scale(0.5) rotate(${r})`
+        ? `translate(0px, ${offset + 90}px) scale(0.4) rotate(${r}deg)` 
+        : `translate(480px, ${offset + 40}px) scale(0.5) rotate(${r}deg)`
 }

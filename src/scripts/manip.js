@@ -278,5 +278,5 @@ export const appendGlobalDefsOn = el => {
 
 export const adjustPopoverPosition = el => {
     const activeKitten = getActiveKitten()
-    el.attr('transform', POPOVER_TRANSFORM_VALUE(activeKitten.age))
+    el.attr('style', `transform: ${POPOVER_TRANSFORM_VALUE(activeKitten.age)}`)
 }
