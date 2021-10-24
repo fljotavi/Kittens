@@ -220,14 +220,14 @@ export const appendOverlayDynamicOn = el => {
         .join('text')
         .attr('class', 'overlaid-text prop-value')
         .text(d => d)
-        .attr('x', 560)
+        .attr('x', 525)
         .attr('y', (d, iRow) => 230 + iRow * 50)
 
     el.selectAll('rect')
         .data([activeKitten.color])
         .join('rect')
         .attr('fill', d => d)
-        .attr('x', 560)
+        .attr('x', 525)
         .attr('y', 370)
         .attr('width', 40)
         .attr('height', 10)
@@ -259,7 +259,7 @@ export const appendGlobalDefsOn = el => {
             >
             </feDisplacementMap>
         </filter>
-        <linearGradient id="queer" x1="0%" y1="0%" x2="100%" y2="0%">
+        <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" style="stop-color:#b91629;stop-opacity:1" />
             <stop offset="17%" style="stop-color:#b91629;stop-opacity:1" />
             <stop offset="17%" style="stop-color:#d35929;stop-opacity:1" />

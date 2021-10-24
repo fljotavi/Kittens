@@ -35,7 +35,7 @@ export const getRandomInt = (min, max) => {
  */
 export const getRandomGender = () => {
     if (Math.random() > 1 - LGBTQ_PERCENTAGE) {
-        return 'Queer!'
+        return 'Non-binary'
     } else {
         return Math.random() > 0.5 ? 'Male' : 'Female'
     }
@@ -64,7 +64,7 @@ export const getRandomKittenColor = () => {
  * @return {string} Generated color string
  */
 export const getRandomBeltColor = (gender) => {
-    return gender === 'Queer!' ? 'url(#queer)' : '#ee3344'
+    return gender === 'Non-binary' ? 'url(#rainbow)' : '#ee3344'
 }
 
 /**
@@ -91,7 +91,7 @@ export const getNormalDistribution = (min, max, skew) => {
 }
 
 /**
- * Works just like Array.prototype.map!
+ * Works just like Array.prototype.map! (but for objects instead of arrays)
  *
  * @param {Object} min The original object
  * @param {Function} max Mapping function (value and key as the first and second argument)
